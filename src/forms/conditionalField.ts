@@ -6,9 +6,7 @@ import { NO_ERRORS, createErrorsMeta } from "../core";
 /**
  * Returns first field that satisfied a specific condition
  */
-export const conditionalField = <T extends Field<any>>(params: {
-  cases: [Store<boolean>, T][];
-}) => {
+export const conditionalField = (params: { cases: [Store<boolean>, Field<any>][] }) => {
   // TODO: No restore for conditionalField?
   const restored = createEvent();
 

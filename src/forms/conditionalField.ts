@@ -6,9 +6,11 @@ import { NO_ERRORS, createErrorsMeta } from "../core";
 /**
  * Returns first field that satisfied a specific condition
  */
-export const conditionalField = (params: { cases: [Store<boolean>, Field<unknown>][] }) => {
+export const conditionalField = <T extends [Store<boolean>, Field<any>][]>(params: {
+  cases: T;
+}) => {
   // TODO: No restore for conditionalField?
-  const restored = createEvent();
+  const restored = createEvent<T[number][1]["$value"]>();
 
   // TODO: Solve this hell somehow
   const $combinedCases = combine(
@@ -57,7 +59,7 @@ export const conditionalField = (params: { cases: [Store<boolean>, Field<unknown
   meta.$isDirty.on($validCase, (_prev, field) => (field ? field.isDirty : false));
 
   return {
-    $value,
+    $value: $value as T[number][1]["$value"],
     restored,
     $errors,
     ...meta,

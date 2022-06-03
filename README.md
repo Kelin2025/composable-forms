@@ -1,6 +1,6 @@
 # Composable forms
 
-Highly-flexible forms library built on top of Effector
+Highly-flexible forms library built on top of [**Effector**](https://effector.dev)!
 
 ## Why "composable"?
 
@@ -20,13 +20,13 @@ This library allows you to **create simple fields**, then **combine them togethe
 npm i composable-forms
 ```
 
-and don't forget peer dependencies
+... and don't forget peer dependencies:
 
 ```bash
 npm i effector joi
 ```
 
-P.S. We use `joi` for validation schemas
+P.S. We use `joi` for validation schemas. Learn more about it [**here**](https://joi.dev/)
 
 ## Usage
 

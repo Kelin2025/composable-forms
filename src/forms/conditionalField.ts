@@ -1,4 +1,4 @@
-import { Store, combine } from "effector";
+import { Store, combine, createEvent } from "effector";
 
 import { Field, Kind } from "../types";
 import { NO_ERRORS, createErrorsMeta } from "../core";
@@ -9,6 +9,9 @@ import { NO_ERRORS, createErrorsMeta } from "../core";
 export const conditionalField = <T extends Field<any>>(params: {
   cases: [Store<boolean>, T][];
 }) => {
+  // TODO: No restore for conditionalField?
+  const restored = createEvent();
+
   // TODO: Solve this hell somehow
   const $combinedCases = combine(
     ...params.cases.map(
@@ -57,6 +60,7 @@ export const conditionalField = <T extends Field<any>>(params: {
 
   return {
     $value,
+    restored,
     $errors,
     ...meta,
     kind: Kind.CONDITIONAL_FIELD,

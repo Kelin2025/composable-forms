@@ -1,5 +1,5 @@
 import { ObjectSchema } from "joi";
-import { createStore, combine } from "effector";
+import { createStore, combine, createEvent, StoreValue, split, sample } from "effector";
 
 import { Kind, FieldsObject } from "../types";
 import { NO_ERRORS, createErrorsMeta, validate, extractValues } from "../core";
@@ -12,6 +12,7 @@ export const composeFields = <T extends FieldsObject>(params: {
   const fieldsArray = Object.values(params.fields);
   const valuesObj = extractValues(params.fields);
   const $value = combine(valuesObj);
+  const restored = createEvent<StoreValue<typeof $value> | void>();
   const $ownErrors = createStore(NO_ERRORS);
   const $errors = combine(
     combine(fieldsArray.map((field) => field.$errors)),
@@ -34,9 +35,25 @@ export const composeFields = <T extends FieldsObject>(params: {
     $ownErrors.on($value, (_prev, value) => validate(value, params.schema!));
   }
 
+  const { reset, __: restoredValue } = split(restored, {
+    reset: (value): value is void => value === undefined,
+  });
+  for (const fieldKey in params.fields) {
+    sample({
+      clock: reset,
+      target: params.fields[fieldKey].restored,
+    });
+    sample({
+      clock: restoredValue,
+      fn: (value) => value![fieldKey],
+      target: params.fields[fieldKey].restored,
+    });
+  }
+
   return {
     fields: params.fields,
     $value,
+    restored,
     $ownErrors,
     $errors,
     ...meta,

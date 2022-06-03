@@ -1,5 +1,5 @@
-import { Store, StoreValue } from "effector";
 import { ValidationErrorItem } from "joi";
+import { Event, Store, StoreValue } from "effector";
 
 export enum Kind {
   FIELD = 0,
@@ -9,6 +9,7 @@ export enum Kind {
 
 export type Field<T> = {
   $value: Store<T>;
+  restored: Event<T | void>;
   $isDirty: Store<boolean>;
   $errors: Store<ValidationErrorItem[]>;
   $isValid: Store<boolean>;

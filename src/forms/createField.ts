@@ -24,6 +24,7 @@ export const createField = <T>(params: { initialValue: T; schema: Schema }) => {
 
   return {
     $value,
+    restored,
     $errors,
     ...meta,
     kind: Kind.FIELD,

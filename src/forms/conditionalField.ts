@@ -1,4 +1,4 @@
-import { Store, combine, createEvent } from "effector";
+import { Store, combine, createEvent, sample } from "effector";
 
 import { Field, Kind } from "../types";
 import { NO_ERRORS, createErrorsMeta } from "../core";
@@ -57,6 +57,14 @@ export const conditionalField = <T extends [Store<boolean>, Field<any>][]>(param
   });
 
   meta.$isDirty.on($validCase, (_prev, field) => (field ? field.isDirty : false));
+
+  for (const fieldCase of params.cases) {
+    sample({
+      clock: restored,
+      filter: fieldCase[0],
+      target: fieldCase[1].restored,
+    });
+  }
 
   return {
     $value: $value as T[number][1]["$value"],

@@ -8,7 +8,7 @@ import { createField } from "../forms/createField";
  */
 export const createInput = <T extends string | number>(params: {
   initialValue: T;
-  schema: Schema;
+  schema?: Schema;
 }) => {
   const field = createField(params);
   const changed = createEvent<T>();

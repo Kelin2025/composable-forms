@@ -14,8 +14,8 @@ export const createErrorsMeta = <T>(params: {
   const $dirtyErrors = combine($isDirty, params.errors, (isDirty, errors) =>
     isDirty ? errors : NO_ERRORS
   );
-  const $isDirtyAndValid = params.errors.map((errors) => errors.length === 0);
-  const $hasDirtyErrors = params.errors.map((errors) => errors.length > 0);
+  const $isDirtyAndValid = $dirtyErrors.map((errors) => errors.length === 0);
+  const $hasDirtyErrors = $dirtyErrors.map((errors) => errors.length > 0);
 
   return {
     $isDirty,

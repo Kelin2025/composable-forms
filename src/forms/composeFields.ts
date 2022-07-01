@@ -1,8 +1,9 @@
 import { ObjectSchema } from "joi";
-import { createStore, combine, createEvent, StoreValue, split, sample } from "effector";
+import { createStore, combine, createEvent, StoreValue, split } from "effector";
 
+import { restoreField } from "../lib/restore-field";
 import { Kind, FieldsObject } from "../types";
-import { NO_ERRORS, createErrorsMeta, validate, extractValues } from "../core";
+import { NO_ERRORS, createErrorsMeta, validate, extractValues, anySchema } from "../core";
 
 /** Combines passed object into a form and creates validation meta for it */
 export const composeFields = <T extends FieldsObject>(params: {
@@ -17,8 +18,8 @@ export const composeFields = <T extends FieldsObject>(params: {
   const $errors = combine(
     combine(fieldsArray.map((field) => field.$errors)),
     $ownErrors,
-    ([fieldErrors, ownErrors]) => {
-      const allErrors = [...fieldErrors, ...ownErrors];
+    (fieldErrors, ownErrors) => {
+      const allErrors = [...fieldErrors.flat(), ...ownErrors];
       return allErrors.length ? allErrors : NO_ERRORS;
     }
   );
@@ -32,21 +33,24 @@ export const composeFields = <T extends FieldsObject>(params: {
   );
 
   if (params.schema) {
-    $ownErrors.on($value, (_prev, value) => validate(value, params.schema!));
+    $ownErrors.on($value, (_prev, value) => {
+      return validate(value, params.schema || anySchema);
+    });
   }
 
   const { reset, __: restoredValue } = split(restored, {
     reset: (value): value is void => value === undefined,
   });
   for (const fieldKey in params.fields) {
-    sample({
-      clock: reset,
-      target: params.fields[fieldKey].restored,
+    restoreField({
+      field: params.fields[fieldKey],
+      fn: () => undefined,
+      trigger: reset,
     });
-    sample({
-      clock: restoredValue,
+    restoreField({
+      field: params.fields[fieldKey],
       fn: (value) => value![fieldKey],
-      target: params.fields[fieldKey].restored,
+      trigger: restoredValue,
     });
   }
 

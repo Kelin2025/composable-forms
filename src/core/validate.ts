@@ -1,6 +1,8 @@
-import { AnySchema, ValidationErrorItem } from "joi";
+import Joi, { AnySchema, ValidationErrorItem } from "joi";
 
 export const NO_ERRORS: ValidationErrorItem[] = [];
+
+export const anySchema = Joi.any();
 
 /**
  * Validates `value` with the passed `schema`.

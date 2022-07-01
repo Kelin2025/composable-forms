@@ -174,4 +174,56 @@ describe("composeFields", () => {
     expect(correct.$value.getState()).toBe("cc");
     expect(incorrect.$value.getState()).toBe("Incorrect");
   });
+
+  it("composeFields with two nested conditionalField's", () => {
+    const blockData = {
+      type: "filter",
+      options: {
+        type: "tags",
+        tag_ids: [2],
+      },
+    };
+
+    const blockType = createField({ initialValue: "message" });
+    const filterType = createField({ initialValue: "tags" });
+    const tagIds = createField({ initialValue: [0] });
+
+    const filterOptions = composeFields({
+      fields: {
+        type: filterType,
+        tag_ids: tagIds,
+      },
+    });
+
+    const message = createField({ initialValue: "Message" });
+
+    const messageOptions = composeFields({
+      fields: {
+        message,
+      },
+    });
+
+    const blockOptions = conditionalField({
+      cases: [
+        [blockType.$value, "filter", filterOptions],
+        [blockType.$value, "message", messageOptions],
+      ],
+    });
+
+    const block = composeFields({
+      fields: {
+        type: blockType,
+        options: blockOptions,
+      },
+    });
+
+    // @ts-expect-error TODO: Solve Union problem
+    block.restored(blockData);
+
+    expect(block.$value.getState()).toEqual(blockData);
+    expect(blockType.$value.getState()).toBe("filter");
+    expect(filterType.$value.getState()).toBe("tags");
+    expect(tagIds.$value.getState()).toEqual([2]);
+    expect(message.$value.getState()).toBe("Message");
+  });
 });

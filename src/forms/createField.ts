@@ -20,7 +20,7 @@ export const createField = <T>(params: { initialValue: T; schema?: Schema }) => 
 
   $value.on(restored, (_prev, next) => (next === undefined ? params.initialValue : next));
 
-  meta.$isDirty.on(sample({ clock: restored }), () => false)
+  meta.$isDirty.on(sample({ clock: restored }), () => false);
 
   if (params.schema) {
     $errors.on($value, (_prev, value) => {

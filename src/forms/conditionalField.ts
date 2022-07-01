@@ -2,58 +2,40 @@ import { Store, combine, createEvent, sample } from "effector";
 
 import { Field, Kind } from "../types";
 import { NO_ERRORS, createErrorsMeta } from "../core";
+import { restoreField } from "../lib/restore-field";
 
-type Case<T> = [Store<T>, T | ((value: T) => boolean), Field<T>]
+type Case<T> = [Store<T>, T | ((value: T) => boolean), Field<T>];
 
 /**
  * Returns first field that satisfied a specific condition
  */
-export const conditionalField = <T extends Case<any>[]>(params: {
-  cases: T;
-}) => {
+export const conditionalField = <T extends Case<any>[]>(params: { cases: T }) => {
   // TODO: No restore for conditionalField?
   const restored = createEvent<T[number][1]["$value"]>();
 
-  const mappedCases = params.cases.map(
-    ([
+  const mappedCases = params.cases.map(([source, predicate, field]) => {
+    return {
       source,
       predicate,
-      {
-        $value,
-        $isDirty,
-        $errors,
-        $isValid,
-        $hasErrors,
-        $dirtyErrors,
-        $isDirtyAndValid,
-        $hasDirtyErrors,
-        kind
-      },
-    ]) => {
-      return ({
-        source,
-        predicate,
-        filter: source.map(value => {
-          return typeof predicate === 'function' ? predicate(value) : value === predicate;
+      fieldStores: {
+        filter: source.map((value) => {
+          return typeof predicate === "function" ? predicate(value) : value === predicate;
         }),
-        value: $value,
-        isDirty: $isDirty,
-        errors: $errors,
-        isValid: $isValid,
-        hasErrors: $hasErrors,
-        dirtyErrors: $dirtyErrors,
-        isDirtyAndValid: $isDirtyAndValid,
-        hasDirtyErrors: $hasDirtyErrors,
-        kind
-      });
-    }
-  )
-
+        value: field.$value,
+        isDirty: field.$isDirty,
+        errors: field.$errors,
+        isValid: field.$isValid,
+        hasErrors: field.$hasErrors,
+        dirtyErrors: field.$dirtyErrors,
+        isDirtyAndValid: field.$isDirtyAndValid,
+        hasDirtyErrors: field.$hasDirtyErrors,
+      },
+      field,
+    };
+  });
 
   // TODO: Solve this hell somehow
-  const $combinedCases = combine(
-    ...mappedCases.map(curCase => combine(curCase))
-  );
+  const $combinedCases = combine(...mappedCases.map((curCase) => combine(curCase.fieldStores)));
 
   const $validCase = $combinedCases.map((fieldCases) => {
     for (const field of fieldCases) {
@@ -72,33 +54,33 @@ export const conditionalField = <T extends Case<any>[]>(params: {
 
   meta.$isDirty.on($validCase, (_prev, field) => (field ? field.isDirty : false));
 
-  const fieldPredicateCases = mappedCases.filter(sourceCase => {
-    return mappedCases.some(fieldCase => {
+  const fieldPredicateCases = mappedCases.filter((sourceCase) => {
+    return mappedCases.some((fieldCase) => {
       // TODO: Add check for field Kind
-      return fieldCase.value === sourceCase.source
-    })
-  })
+      return fieldCase.fieldStores.value === sourceCase.source;
+    });
+  });
 
   const prioritizedCases = [...mappedCases].sort((a, b) => {
     if (fieldPredicateCases.includes(a)) {
-      return -1
+      return -1;
     }
     if (fieldPredicateCases.includes(b)) {
-      return -1
+      return -1;
     }
-    return 0
-  })
+    return 0;
+  });
 
   for (const fieldCase of prioritizedCases) {
     const currentCaseRestored = sample({
       clock: restored,
-      filter: fieldCase.filter,
+      filter: fieldCase.fieldStores.filter,
     });
-    
-    fieldCase.value.on(currentCaseRestored, (_prev, value) => {
-      return value === undefined ? fieldCase.value.defaultState : value
-    })
-    fieldCase.isDirty.on(currentCaseRestored, () => false)
+
+    restoreField({
+      field: fieldCase.field,
+      trigger: currentCaseRestored,
+    });
   }
 
   return {

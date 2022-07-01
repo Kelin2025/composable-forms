@@ -1,5 +1,5 @@
 import { Schema } from "joi";
-import { createEvent, createStore } from "effector";
+import { sample, createEvent, createStore } from "effector";
 
 import { Kind } from "../types";
 import { validate, createErrorsMeta, NO_ERRORS } from "../core";
@@ -16,9 +16,11 @@ export const createField = <T>(params: { initialValue: T; schema?: Schema }) => 
     errors: $errors,
   });
 
-  meta.$isDirty.on($value, () => true).on(restored, () => false);
+  meta.$isDirty.on($value, () => true);
 
   $value.on(restored, (_prev, next) => (next === undefined ? params.initialValue : next));
+
+  meta.$isDirty.on(sample({ clock: restored }), () => false)
 
   if (params.schema) {
     $errors.on($value, (_prev, value) => {

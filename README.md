@@ -2,6 +2,8 @@
 
 Highly-flexible forms library built on top of [**Effector**](https://effector.dev)!
 
+**WARNING:** This is still in development. API might (and will!) change
+
 ## Why "composable"?
 
 The problem with most form-managers is that they are based on monolithic schemas.

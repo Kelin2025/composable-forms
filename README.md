@@ -2,7 +2,7 @@
 
 Highly-flexible forms library built on top of [**Effector**](https://effector.dev)!
 
-**WARNING:** This is still in development. API might (and will!) change
+**WARNING: This is still in development. API might (and will!) change**
 
 ## Why "composable"?
 
